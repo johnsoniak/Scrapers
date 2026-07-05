@@ -1,0 +1,101 @@
+{
+  "id": "zaluknijcc",
+  "name": "Zaluknij.cc",
+  "version": "1.0.1",
+  "description": "Scraper JSON do zaluknij.cc. Nie wymaga cookies ani XOR.",
+  "baseUrl": "https://zaluknij.cc",
+  "language": "pl",
+  "types": ["movies", "series"],
+  "nsfw": false,
+  "priority": 10,
+  "enabledByDefault": true,
+  "cf": true,
+  "category": "portal",
+  "moduleType": "scraper",
+  "runtime": {
+    "enabled": true
+  },
+  "search": {
+    "url": "/wyszukiwarka",
+    "method": "GET",
+    "params": {
+      "phrase": "{title}"
+    },
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Referer": "{baseUrl}/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    },
+    "responseType": "html",
+    "resultSelector": {
+      "container": "#advanced-search a.item[href]",
+      "fields": {
+        "title": ".title | text",
+        "url": "| href",
+        "year": "| href",
+        "thumbnail": "img | src"
+      }
+    }
+  },
+  "matching": {
+    "titleField": "title",
+    "yearField": "year",
+    "urlField": "url",
+    "yearTolerance": 1,
+    "scoring": {
+      "minScore": 70
+    }
+  },
+  "detail": {
+    "url": "{result.url}",
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Referer": "{baseUrl}/wyszukiwarka?phrase={title}",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  "episode": {
+    "url": "{result.url}",
+    "container": "ul#episode-list a[href], #episode-list a[href], a[href*=\"/odcinek\"], a[href*=\"/serial\"]",
+    "urlField": "| href",
+    "labelField": "| text",
+    "pattern": "(?:s|sezon\\s*)(\\d+)(?:e|\\s*odcinek\\s*)(\\d+)"
+  },
+  "sources": {
+    "extract": [
+      {
+        "type": "css",
+        "selector": "#link-list tbody tr:has(td.link-to-video a[href])",
+        "fields": {
+          "url": "td.link-to-video a[href] | href",
+          "hosting": "td.link-to-video img | attr:alt",
+          "version": "td:nth-child(3) | text",
+          "quality": "td:nth-child(4) | text"
+        }
+      }
+    ],
+    "transform": [
+      {
+        "field": "quality",
+        "type": "map",
+        "values": {
+          "wysoka": "1080p",
+          "średnia": "720p",
+          "srednia": "720p",
+          "niska": "480p"
+        },
+        "default": "SD"
+      }
+    ],
+    "output": {
+      "url": "{url}",
+      "hosting": "{hosting}",
+      "version": "{version}",
+      "quality": "{quality}",
+      "type": "pl",
+      "language": "pl"
+    }
+  }
+}

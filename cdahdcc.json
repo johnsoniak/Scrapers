@@ -1,0 +1,90 @@
+{
+  "id": "cdahdcc",
+  "name": "CDA-HD.cc",
+  "version": "1.0.1",
+  "description": "Scraper JSON do cda-hd.cc. Wyszukuje tytuly i wyciaga iframe hosterow ze strony filmu.",
+  "baseUrl": "https://cda-hd.cc",
+  "language": "pl",
+  "types": ["movies", "series"],
+  "nsfw": false,
+  "priority": 13,
+  "enabledByDefault": true,
+  "cf": false,
+  "category": "portal",
+  "moduleType": "scraper",
+  "runtime": {
+    "enabled": true
+  },
+  "search": {
+    "url": "/",
+    "method": "GET",
+    "params": {
+      "s": "{title}"
+    },
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Referer": "{baseUrl}/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    },
+    "responseType": "html",
+    "resultSelector": {
+      "container": "div.item:has(span.tt):has(a[href])",
+      "fields": {
+        "title": "span.tt | text",
+        "url": "a[href] | href",
+        "year": "span.year | text",
+        "thumbnail": "img[data-src] | attr:data-src"
+      }
+    }
+  },
+  "matching": {
+    "titleField": "title",
+    "yearField": "year",
+    "urlField": "url",
+    "yearTolerance": 1,
+    "scoring": {
+      "minScore": 55
+    }
+  },
+  "detail": {
+    "url": "{result.url}",
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Referer": "{baseUrl}/?s={title}",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  "sources": {
+    "extract": [
+      {
+        "type": "regex",
+        "pattern": "<iframe[^>]+src=[\\\"'](?!https?://(?:goo\\.gl|borrowhourglass\\.com))((?:https?:)?//([^/\\\"']+)[^\\\"']*)[\\\"'][^>]*>",
+        "fields": {
+          "url": 1,
+          "hosting": 2
+        }
+      }
+    ],
+    "transform": [
+      {
+        "field": "url",
+        "type": "regexReplace",
+        "pattern": "^//",
+        "replacement": "https://"
+      }
+    ],
+    "output": {
+      "url": "{url}",
+      "hosting": "{hosting}",
+      "version": "CDA-HD",
+      "quality": "HD",
+      "type": "pl",
+      "language": "pl",
+      "direct": false,
+      "canPlay": false,
+      "description": "Iframe z CDA-HD.cc"
+    }
+  }
+}

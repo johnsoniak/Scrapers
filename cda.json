@@ -1,0 +1,136 @@
+{
+  "id": "cda",
+  "name": "CDA.pl",
+  "version": "1.0.1",
+  "description": "Scraper JSON do publicznych filmow CDA. Pomija wyniki Premium i wyciaga HLS/manifest z player_data.",
+  "baseUrl": "https://www.cda.pl",
+  "language": "pl",
+  "types": ["movies", "series"],
+  "nsfw": false,
+  "priority": 12,
+  "enabledByDefault": true,
+  "cf": true,
+  "category": "portal",
+  "moduleType": "scraper",
+  "runtime": {
+    "enabled": true
+  },
+  "search": {
+    "url": "/szukaj",
+    "method": "GET",
+    "params": {
+      "q": "{title}"
+    },
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Referer": "{baseUrl}/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    },
+    "responseType": "html",
+    "resultSelector": {
+      "container": ".video-clip-wrapper:has(a[href*=\"/video/\"]):not(:has(.flag-video-premium))",
+      "fields": {
+        "title": ".link-title-visit | text",
+        "url": ".link-title-visit | href",
+        "year": ".link-title-visit | text",
+        "thumbnail": "img.video-clip-image | src",
+        "quality": ".hd-ico-elem | text"
+      }
+    }
+  },
+  "matching": {
+    "titleField": "title",
+    "yearField": "year",
+    "urlField": "url",
+    "yearTolerance": 1,
+    "scoring": {
+      "minScore": 55
+    }
+  },
+  "detail": {
+    "url": "{result.url}",
+    "headers": {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Referer": "{baseUrl}/szukaj?q={title}",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    }
+  },
+  "sources": {
+    "extract": [
+      {
+        "type": "regex",
+        "pattern": "\\\"file\\\"\\s*:\\s*\\\"([^\\\"]+?index\\.m3u8[^\\\"]*)\\\"[\\s\\S]*?\\\"quality\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"",
+        "fields": {
+          "url": 1,
+          "qualityCode": 2
+        }
+      },
+      {
+        "type": "regex",
+        "pattern": "\\\"manifest_apple\\\"\\s*:\\s*\\\"([^\\\"]+?\\.m3u8[^\\\"]*)\\\"[\\s\\S]*?\\\"quality\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"",
+        "fields": {
+          "url": 1,
+          "qualityCode": 2
+        }
+      }
+    ],
+    "transform": [
+      {
+        "field": "url",
+        "type": "regexReplace",
+        "pattern": "\\\\/",
+        "replacement": "/"
+      },
+      {
+        "field": "qualityCode",
+        "type": "map",
+        "values": {
+          "vl": "360p",
+          "lq": "480p",
+          "sd": "720p",
+          "hd": "1080p",
+          "fullhd": "1080p"
+        },
+        "default": "AUTO"
+      }
+    ],
+    "output": {
+      "url": "{url}",
+      "hosting": "cda.pl",
+      "version": "CDA",
+      "quality": "{qualityCode}",
+      "type": "pl",
+      "language": "pl",
+      "direct": true,
+      "canPlay": true,
+      "headers": {
+        "Referer": "{result.url}",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+      }
+    }
+  },
+  "errorDetection": [
+    {
+      "id": "premium",
+      "detectIn": "body",
+      "contains": "\"premium\":true",
+      "response": {
+        "error": "CDA_PREMIUM",
+        "message": "Ten material CDA wymaga konta Premium."
+      }
+    },
+    {
+      "id": "cloudflare",
+      "detectIn": "body",
+      "contains": "challenges.cloudflare.com",
+      "response": {
+        "error": "CLOUDFLARE_CHALLENGE",
+        "message": "CDA wymaga przejscia Cloudflare.",
+        "requiresWebView": true,
+        "url": "{baseUrl}"
+      }
+    }
+  ]
+}
