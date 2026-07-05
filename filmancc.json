@@ -1,7 +1,7 @@
 {
   "id": "filmancc",
   "name": "Filman.cc",
-  "version": "1.4",
+  "version": "1.5",
   "description": "Filman.cc z lazy-resolve: wyszukuje i listuje zrodla bez zuzywania limitow, a lancuch routeToken -> /link/token -> tmp-url.pro (XOR) rozwiazuje natywny resolver dopiero po wybraniu linku w playerze.",
   "baseUrl": "https://filman.cc",
   "language": "pl",
@@ -36,9 +36,12 @@
   ],
   "auth": {
     "type": "login",
+    "webviewLogin": true,
     "loginUrl": "/logowanie",
     "usernameField": "login",
     "passwordField": "password",
+    "formSelector": "#signin-form",
+    "successCookie": "BKD_REMEMBER",
     "username": "{settings.username}",
     "password": "{settings.password}",
     "fields": {
