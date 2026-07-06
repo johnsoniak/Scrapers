@@ -1,8 +1,8 @@
 {
   "id": "zaluknijcc",
   "name": "Zaluknij.cc",
-  "version": "1.0.1",
-  "description": "Scraper JSON do zaluknij.cc. Nie wymaga cookies ani XOR.",
+  "version": "1.0.2",
+  "description": "Scraper JSON do zaluknij.cc. Selektory zgodne z dzialajacym scraperem: #advanced-search .col-sm-*, video-card. Cloudflare rozwiazywany przez WebView (snapshot).",
   "baseUrl": "https://zaluknij.cc",
   "language": "pl",
   "types": ["movies", "series"],
@@ -22,18 +22,18 @@
       "phrase": "{title}"
     },
     "headers": {
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.7,en;q=0.3",
       "Referer": "{baseUrl}/",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0"
     },
     "responseType": "html",
     "resultSelector": {
-      "container": "#advanced-search a.item[href]",
+      "container": "#advanced-search div[class*=\"col-sm-\"]:has(a[href]):has(.title)",
       "fields": {
         "title": ".title | text",
-        "url": "| href",
-        "year": "| href",
+        "url": "a | href",
+        "year": "a | href",
         "thumbnail": "img | src"
       }
     }
@@ -50,27 +50,35 @@
   "detail": {
     "url": "{result.url}",
     "headers": {
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "pl,en-US;q=0.9,en;q=0.8",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      "Accept-Language": "pl,en-US;q=0.7,en;q=0.3",
       "Referer": "{baseUrl}/wyszukiwarka?phrase={title}",
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0"
     }
   },
   "episode": {
     "url": "{result.url}",
-    "container": "ul#episode-list a[href], #episode-list a[href], a[href*=\"/odcinek\"], a[href*=\"/serial\"]",
+    "container": "#episode-list a[href], ul#episode-list li a[href], a:matchesOwn(s\\d+e\\d+)",
     "urlField": "| href",
     "labelField": "| text",
-    "pattern": "(?:s|sezon\\s*)(\\d+)(?:e|\\s*odcinek\\s*)(\\d+)"
+    "pattern": "s(\\d+)e(\\d+)"
   },
   "sources": {
     "extract": [
       {
         "type": "css",
-        "selector": "#link-list tbody tr:has(td.link-to-video a[href])",
+        "selector": "div.video-card.link-to-video:has(a[href])",
         "fields": {
-          "url": "td.link-to-video a[href] | href",
-          "hosting": "td.link-to-video img | attr:alt",
+          "url": "a.stretched-link | href",
+          "version": "span.badge-version | text",
+          "quality": ".badge-quality | text"
+        }
+      },
+      {
+        "type": "css",
+        "selector": "#link-list tbody tr:has(a[href]), table tbody tr:has(a[href])",
+        "fields": {
+          "url": "a | href",
           "version": "td:nth-child(3) | text",
           "quality": "td:nth-child(4) | text"
         }
@@ -81,17 +89,16 @@
         "field": "quality",
         "type": "map",
         "values": {
-          "wysoka": "1080p",
+          "wysoka": "720p",
           "średnia": "720p",
           "srednia": "720p",
-          "niska": "480p"
+          "niska": "CAM"
         },
         "default": "SD"
       }
     ],
     "output": {
       "url": "{url}",
-      "hosting": "{hosting}",
       "version": "{version}",
       "quality": "{quality}",
       "type": "pl",
